@@ -1,110 +1,91 @@
 document.addEventListener("DOMContentLoaded", () => {
-    const availableGallery = document.getElementById("available-gallery");
-    const pastGallery = document.getElementById("past-gallery");
+    
+    // 1. Populate page content from config
+    const populateFromConfig = () => {
+        if (typeof config !== 'undefined') {
+            if (document.getElementById("page-title")) document.getElementById("page-title").innerText = config.pageTitle;
+            if (document.getElementById("logo-text")) document.getElementById("logo-text").innerText = config.logoText;
+            if (document.getElementById("logo-tagline")) document.getElementById("logo-tagline").innerText = config.logoTagline;
+            
+            if (document.getElementById("hero-subtitle")) document.getElementById("hero-subtitle").innerText = config.hero.subtitle;
+            if (document.getElementById("hero-title")) document.getElementById("hero-title").innerHTML = config.hero.title;
+            if (document.getElementById("hero-description")) document.getElementById("hero-description").innerHTML = config.hero.description;
+            
+            const heroBtn = document.getElementById("hero-button");
+            if (heroBtn) {
+                const icon = heroBtn.querySelector('i');
+                heroBtn.innerHTML = '';
+                if (icon) heroBtn.appendChild(icon);
+                heroBtn.appendChild(document.createTextNode(' ' + config.hero.buttonText));
+            }
+        }
+    };
 
-    // Συναρτήση δημιουργίας κάρτας (Component)
+    // 2. Συναρτήση δημιουργίας κάρτας (Component)
+// 2. Συναρτήση δημιουργίας κάρτας (Component)
+// 2. Συναρτήση δημιουργίας κάρτας (Component)
     function createCard(icon) {
         const card = document.createElement("div");
         card.className = "card";
 
-        // Κατασκευή διαδρομής εικόνας (υποθέτουμε φάκελο img/)
-        const imageSrc = `img/${icon.image}`;
+        const firstImage = (icon.images && icon.images.length > 0) ? icon.images[0] : 'placeholder.jpg';
+        const imageSrc = `img/${firstImage}`;
+        
+        const productId = icon.id || icon.title.toLowerCase().replace(/\s+/g, '-');
 
-        const buyButton = icon.status === "available"
-            ? `<a href="${icon.ebayLink}" target="_blank" class="buy-btn">Αγορά στο eBay</a>`
-            : `<span class="sold-tag">Εξαντλήθηκε</span>`;
+        // Καθορίζουμε τα κουμπιά βάσει του status
+        let actionButtons = "";
+
+        if (icon.status === "available") {
+            // Για τα διαθέσιμα: eBay + Details
+            actionButtons = `
+                <div class="card-buttons">
+                    <a href="${icon.ebayLink}" target="_blank" class="buy-btn">Buy on eBay</a>
+                    <a href="product-page.html?id=${productId}" class="view-btn">Details</a>
+                </div>`;
+        } else {
+            // Για τα παλαιότερα έργα: Μόνο Details
+            actionButtons = `
+                <div class="card-buttons">
+                    <a href="product-page.html?id=${productId}" class="view-btn" style="width: 100%; text-align: center;">Details</a>
+                </div>`;
+        }
 
         card.innerHTML = `
-            <img src="${imageSrc}" alt="${icon.title}" loading="lazy">
+            <div class="card-image-container">
+                <img src="${imageSrc}" alt="${icon.title}" loading="lazy">
+            </div>
             <div class="card-content">
                 <h3>${icon.title}</h3>
                 <span class="price">${icon.price}</span>
-                ${buyButton}
+                ${actionButtons}
             </div>
         `;
         return card;
     }
 
+    // 3. Φόρτωση των Icons από το data.js
     function loadIcons() {
-        const icons = [
-            {
-                "title": "Αγία Ελένη",
-                "price": "150€",
-                "image": "agia-eleni.jpg",
-                "ebayLink": "https://www.ebay.com/itm/dummy1",
-                "status": "available"
-            },
-            {
-                "title": "Αγία Αικατερίνη",
-                "price": "120€",
-                "image": "agia-aikaterini.jpg",
-                "ebayLink": "https://www.ebay.com/itm/dummy2",
-                "status": "available"
-            },
-            {
-                "title": "Ιησούς Χριστός 1",
-                "price": "180€",
-                "image": "iisous-christos-1.jpg",
-                "ebayLink": "https://www.ebay.com/itm/dummy3",
-                "status": "available"
-            },
-            {
-                "title": "Άγιος Νικόλαος",
-                "price": "130€",
-                "image": "agios-nikolaos.jpg",
-                "ebayLink": "https://www.ebay.com/itm/dummy4",
-                "status": "available"
-            },
-            {
-                "title": "Παναγία 1",
-                "price": "160€",
-                "image": "panagia-1.jpg",
-                "ebayLink": "https://www.ebay.com/itm/dummy5",
-                "status": "available"
-            },
-            {
-                "title": "Αγία Μαρίνα",
-                "price": "140€",
-                "image": "Αγία Μαρίνα.jpg",
-                "ebayLink": "https://www.ebay.com/itm/dummy6",
-                "status": "available"
-            },
-            {
-                "title": "Άγιος Δημήτριος",
-                "price": "Sold",
-                "image": "agios-dimitrios.png",
-                "ebayLink": "#",
-                "status": "past"
-            },
-            {
-                "title": "Αγία Παρασκευή",
-                "price": "Sold",
-                "image": "Αγία Παρασκευή.jpg",
-                "ebayLink": "#",
-                "status": "past"
-            },
-            {
-                "title": "Άγιος Εφραίμ",
-                "price": "Sold",
-                "image": "agios-efraim-neas-makris.jpg",
-                "ebayLink": "#",
-                "status": "past"
-            }
-        ];
-        
-        // Καθαρισμός των container
+        const availableGallery = document.getElementById("available-gallery");
+        const pastGallery = document.getElementById("past-gallery");
+
         if (availableGallery) availableGallery.innerHTML = '';
         if (pastGallery) pastGallery.innerHTML = '';
 
-        icons.forEach(icon => {
-            const card = createCard(icon);
-            if (icon.status === 'available') {
-                if(availableGallery) availableGallery.appendChild(card);
-            } else {
-                if(pastGallery) pastGallery.appendChild(card);
-            }
-        });
+        if (typeof iconsData !== 'undefined' && Array.isArray(iconsData)) {
+            iconsData.forEach(icon => {
+                const card = createCard(icon);
+                if (icon.status === 'available') {
+                    if (availableGallery) availableGallery.appendChild(card);
+                } else {
+                    if (pastGallery) pastGallery.appendChild(card);
+                }
+            });
+        } else {
+            console.error("Τα δεδομένα (iconsData) δεν βρέθηκαν.");
+        }
     }
 
+    populateFromConfig();
     loadIcons();
 });
